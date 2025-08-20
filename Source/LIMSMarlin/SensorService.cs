@@ -26,20 +26,24 @@ internal class SensorService
         }
         catch (Exception ex)
         {
-            Resolver.Log.Error($"Failed to initialize MPU6050: {ex.Message}");
+            Resolver.Log.Error($"Failed to initialize BMI270: {ex.Message}");
             _imu = null;
         }
+
         try
         {
             _tempSensor = new Aht10(i2c, 0x38);
             _tempSensor.Read().GetAwaiter().GetResult(); // Initial read to see if the sensor is even there
             Resolver.Log.Info("Temp sensor found");
+
+            // TODO: add calibration offset for temp
         }
         catch (Exception ex)
         {
             Resolver.Log.Error($"Failed to initialize AHT10: {ex.Message}");
             _tempSensor = null;
         }
+
         try
         {
             _airQualitySensor = new Ens160(i2c, 0x52);
@@ -53,8 +57,17 @@ internal class SensorService
 
         try
         {
-            _adc = new Ads1115(i2c, address: Ads1x15Base.Addresses.Address_0x48);
+            _adc = new Ads1115(
+                i2c,
+                Ads1x15Base.Addresses.Address_0x48,
+                Ads1x15Base.MeasureMode.Continuous,
+                Ads1x15Base.ChannelSetting.A0SingleEnded,
+                Ads1115.SampleRateSetting.Sps128);
+
             Resolver.Log.Info("ADC found");
+
+            // TODO: configure ADC range
+
         }
         catch (Exception ex)
         {
@@ -76,6 +89,7 @@ internal class SensorService
         var data = new SensorData();
         bool hasData = false;
 
+        // TODO: make periods configurable
         while (!cancellationToken.IsCancellationRequested)
         {
             data.Clear();
@@ -95,20 +109,18 @@ internal class SensorService
                 }
             }
 
-            if (i % 4 == 0)
+            if (i % 100 == 0)
             {
                 if (_tempSensor != null)
                 {
                     var t = await _tempSensor.Read();
                     if (t.Temperature != null)
                     {
-                        Resolver.Log.Info($"Temperature: {t.Temperature.Value.Celsius:N2} °C");
                         data.Temperature = t.Temperature.Value.Celsius;
                         hasData = true;
                     }
                     if (t.Humidity != null)
                     {
-                        Resolver.Log.Info($"Humidity: {t.Humidity.Value:N2} %");
                         data.Humidity = t.Humidity.Value.Percent;
                         hasData = true;
                     }
@@ -116,18 +128,14 @@ internal class SensorService
 
                 if (_airQualitySensor != null)
                 {
-                    Resolver.Log.Info("Reading AQ");
-
                     var aq = await _airQualitySensor.Read();
                     if (aq.TVOCConcentration != null)
                     {
-                        Resolver.Log.Info($"TVOC: {aq.TVOCConcentration.Value.PartsPerMillion:n2}ppm");
                         data.TVOC = aq.TVOCConcentration.Value.PartsPerMillion;
                         hasData = true;
                     }
                     if (aq.CO2Concentration != null)
                     {
-                        Resolver.Log.Info($"CO2: {aq.CO2Concentration.Value.PartsPerMillion:n2}ppm");
                         data.CO2 = aq.CO2Concentration.Value.PartsPerMillion;
                         hasData = true;
                     }
@@ -136,7 +144,7 @@ internal class SensorService
                 if (_adc != null)
                 {
                     var channel0 = await _adc.Read();
-                    Resolver.Log.Info($"ADC: {channel0:N4} V");
+                    data.ADCValue = channel0.Volts;
                     hasData = true;
                 }
             }
@@ -146,7 +154,7 @@ internal class SensorService
                 DataReady?.Invoke(this, data);
             }
 
-            await Task.Delay(500);
+            await Task.Delay(10); // 100Hz
         }
     }
 }

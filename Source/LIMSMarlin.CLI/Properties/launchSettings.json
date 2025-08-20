@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "LIMSMarlin.CLI": {
+      "commandName": "Project",
+      "commandLineArgs": "lims-marlin.local"
+    }
+  }
+}

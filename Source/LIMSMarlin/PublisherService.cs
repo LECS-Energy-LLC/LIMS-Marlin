@@ -26,6 +26,8 @@ internal class PublisherService
     /// </summary>
     public async Task HandleWebSocketAsync(HttpContext context)
     {
+        Resolver.Log.Info($"WebSocket request");
+
         if (!context.WebSockets.IsWebSocketRequest)
         {
             context.Response.StatusCode = 400;
@@ -60,7 +62,6 @@ internal class PublisherService
     {
         if (_connections.IsEmpty)
         {
-            Resolver.Log.Warn("No WebSocket clients connected");
             return;
         }
 
@@ -96,7 +97,6 @@ internal class PublisherService
         if (tasks.Count > 0)
         {
             await Task.WhenAll(tasks);
-            Resolver.Log.Info($"Data sent to {tasks.Count} WebSocket clients");
         }
     }
 

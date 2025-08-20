@@ -1,0 +1,32 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path="../../LIMS-Marlin.md" />
+  </Folder>
+
+  <Folder Name="/_External/">
+    <Project Path="../../../../wilderness/Meadow.Contracts/Source/Meadow.Contracts/Meadow.Contracts.csproj" />
+    <Project Path="../../../../wilderness/Meadow.Core/Source/extensions/Meadow.AspNetCore.Abstractions/Meadow.AspNetCore.Abstractions.csproj" />
+    <Project Path="../../../../wilderness/Meadow.Core/Source/implementations/linux/Meadow.Linux/Meadow.Linux.csproj" />
+    <Project Path="../../../../wilderness/Meadow.Core/Source/implementations/windows/Meadow.Windows/Meadow.Windows.csproj" />
+    <Project Path="../../../../wilderness/Meadow.Core/Source/Meadow.Core/Meadow.Core.csproj" />
+    <Project Path="../../../../wilderness/Meadow.Foundation/Source/Meadow.Foundation.Peripherals/ICs.ADC.Ads1x15/Driver/ICs.ADC.Ads1x15.csproj">
+      <Deploy />
+    </Project>
+    <Project Path="../../../../wilderness/Meadow.Foundation/Source/Meadow.Foundation.Peripherals/Sensors.Atmospheric.Ahtx0/Driver/Sensors.Atmospheric.Ahtx0.csproj">
+      <Deploy />
+    </Project>
+    <Project Path="../../../../wilderness/Meadow.Foundation/Source/Meadow.Foundation.Peripherals/Sensors.Environmental.Ens160/Driver/Sensors.Environmental.Ens160.csproj">
+      <Deploy />
+    </Project>
+    <Project Path="../../../../wilderness/Meadow.Foundation/Source/Meadow.Foundation.Peripherals/Sensors.Motion.Bmi270/Driver/Sensors.Motion.Bmi270.csproj">
+      <Deploy />
+    </Project>
+    <Project Path="../../../../wilderness/Meadow.Logging/Source/Meadow.Logging/lib/Meadow.Logging.csproj" />
+    <Project Path="../../../../wilderness/Meadow.Modbus/src/Meadow.Modbus/Meadow.Modbus.csproj" />
+    <Project Path="../../../../wilderness/Meadow.Units/Source/Meadow.Units/Meadow.Units.csproj" />
+    <Project Path="../../../../wilderness/MQTTnet/Source/MQTTnet/MQTTnet.csproj" />
+  </Folder>
+  <Project Path="../LIMSMarlin.CLI/LIMSMarlin.CLI.csproj" Id="ff21bc34-b854-4f0c-89ec-13336dcf6db8" />
+  <Project Path="../LIMSMarlin.SDK/LIMSMarlin.SDK.csproj" Id="a3081147-1983-4f28-9eee-e037ae07cf5b" />
+  <Project Path="LIMSMarlin.csproj" />  
+</Solution>

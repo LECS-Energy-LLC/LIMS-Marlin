@@ -1,4 +1,4 @@
-﻿namespace LIMSMarlin;
+﻿namespace LIMSMarlin.SDK;
 
 public class SensorData
 {
