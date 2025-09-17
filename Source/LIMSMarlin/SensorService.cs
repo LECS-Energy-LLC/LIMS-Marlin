@@ -1,8 +1,10 @@
-﻿using Meadow;
+﻿using LIMSMarlin.SDK;
+using Meadow;
 using Meadow.Foundation.ICs.ADC;
 using Meadow.Foundation.Sensors.Atmospheric;
 using Meadow.Foundation.Sensors.Environmental;
 using Meadow.Foundation.Sensors.Motion;
+using Meadow.Hardware;
 
 namespace LIMSMarlin;
 
@@ -13,11 +15,25 @@ internal class SensorService
     private readonly Bmi270? _imu;
     private readonly Aht10? _tempSensor;
     private readonly Ens160? _airQualitySensor;
-    private readonly Ads1115? _adc;
+    private readonly Ads1115? _adc0;
+    private readonly Ads1115? _adc1;
+    private readonly Ads1115? _adc2;
+    private readonly Ads1115? _adc3;
+    private readonly IDigitalOutputPort _fanControl;
 
     public SensorService(RaspberryPi hardware)
     {
         var i2c = hardware.CreateI2cBus();
+
+        try
+        {
+            _fanControl = hardware.Pins.GPIO16.CreateDigitalOutputPort(true);
+        }
+        catch (Exception ex)
+        {
+            Resolver.Log.Error($"Failed to initialize fan control on GPIO16: {ex.Message}");
+            throw;
+        }
 
         try
         {
@@ -57,11 +73,32 @@ internal class SensorService
 
         try
         {
-            _adc = new Ads1115(
+            _adc0 = new Ads1115(
                 i2c,
                 Ads1x15Base.Addresses.Address_0x48,
                 Ads1x15Base.MeasureMode.Continuous,
                 Ads1x15Base.ChannelSetting.A0SingleEnded,
+                Ads1115.SampleRateSetting.Sps128);
+
+            _adc1 = new Ads1115(
+                i2c,
+                Ads1x15Base.Addresses.Address_0x48,
+                Ads1x15Base.MeasureMode.Continuous,
+                Ads1x15Base.ChannelSetting.A1SingleEnded,
+                Ads1115.SampleRateSetting.Sps128);
+
+            _adc2 = new Ads1115(
+                i2c,
+                Ads1x15Base.Addresses.Address_0x48,
+                Ads1x15Base.MeasureMode.Continuous,
+                Ads1x15Base.ChannelSetting.A2SingleEnded,
+                Ads1115.SampleRateSetting.Sps128);
+
+            _adc3 = new Ads1115(
+                i2c,
+                Ads1x15Base.Addresses.Address_0x48,
+                Ads1x15Base.MeasureMode.Continuous,
+                Ads1x15Base.ChannelSetting.A3SingleEnded,
                 Ads1115.SampleRateSetting.Sps128);
 
             Resolver.Log.Info("ADC found");
@@ -72,7 +109,7 @@ internal class SensorService
         catch (Exception ex)
         {
             Resolver.Log.Error($"Failed to initialize ADS1115: {ex.Message}");
-            _adc = null;
+            _adc0 = null;
         }
     }
 
@@ -141,10 +178,28 @@ internal class SensorService
                     }
                 }
 
-                if (_adc != null)
+                if (_adc0 != null)
                 {
-                    var channel0 = await _adc.Read();
-                    data.ADCValue = channel0.Volts;
+                    var channel0 = await _adc0.Read();
+                    data.ADC0Value = channel0.Volts;
+                    hasData = true;
+                }
+                if (_adc1 != null)
+                {
+                    var channel1 = await _adc1.Read();
+                    data.ADC1Value = channel1.Volts;
+                    hasData = true;
+                }
+                if (_adc2 != null)
+                {
+                    var channel2 = await _adc2.Read();
+                    data.ADC2Value = channel2.Volts;
+                    hasData = true;
+                }
+                if (_adc3 != null)
+                {
+                    var channel3 = await _adc3.Read();
+                    data.ADC3Value = channel3.Volts;
                     hasData = true;
                 }
             }

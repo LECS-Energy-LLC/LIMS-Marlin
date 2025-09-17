@@ -15,7 +15,7 @@ internal class Program
     private static double? _lastHumidity;
     private static double? _lastTVOC;
     private static double? _lastCO2;
-    private static double? _lastADCValue;
+    private static double? _lastADC0Value;
 
     // Acceleration axis selection and baseline
     private static int _currentAxis = 2; // 0=X, 1=Y, 2=Z (default to Z)
@@ -24,6 +24,9 @@ internal class Program
     private static double _baselineY = 0;
     private static double _baselineZ = 0;
     private static bool _baselineCollected = false;
+    private static double _lastADC1Value;
+    private static double _lastADC2Value;
+    private static double _lastADC3Value;
     private static readonly List<double> _baselineXSamples = new();
     private static readonly List<double> _baselineYSamples = new();
     private static readonly List<double> _baselineZSamples = new();
@@ -129,7 +132,10 @@ internal class Program
             if (data.Humidity.HasValue) _lastHumidity = data.Humidity.Value;
             if (data.TVOC.HasValue) _lastTVOC = data.TVOC.Value;
             if (data.CO2.HasValue) _lastCO2 = data.CO2.Value;
-            if (data.ADCValue.HasValue) _lastADCValue = data.ADCValue.Value;
+            if (data.ADC0Value.HasValue) _lastADC0Value = data.ADC0Value.Value;
+            if (data.ADC1Value.HasValue) _lastADC1Value = data.ADC1Value.Value;
+            if (data.ADC2Value.HasValue) _lastADC2Value = data.ADC2Value.Value;
+            if (data.ADC3Value.HasValue) _lastADC3Value = data.ADC3Value.Value;
 
             if (data.AccelerationX.HasValue && data.AccelerationY.HasValue && data.AccelerationZ.HasValue)
             {
@@ -214,7 +220,7 @@ internal class Program
         var humidity = _lastHumidity?.ToString("F1") ?? "N/A";
         var tvoc = _lastTVOC?.ToString("F1") ?? "N/A";
         var co2 = _lastCO2?.ToString("F1") ?? "N/A";
-        var adc = _lastADCValue?.ToString("F3") ?? "N/A";
+        var adc = $"[{_lastADC0Value:F3},{_lastADC1Value:F3},{_lastADC2Value:F3},{_lastADC3Value:F3}]";
 
         Console.WriteLine($"│ Temperature: {temp}°C  Humidity: {humidity}%  TVOC: {tvoc}ppm  CO2: {co2}ppm  ADC: {adc}V".PadRight(width - 1) + "│");
 
