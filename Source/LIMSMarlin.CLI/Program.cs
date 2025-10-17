@@ -36,12 +36,13 @@ internal class Program
         Console.CursorVisible = false;
         Console.Clear();
 
-        string host = "lims-marlin.local";
+        string host = "192.168.68.72";
         if (args.Length > 0)
         {
             host = args[0];
         }
 
+        host = "192.168.68.72";
         _client = new Client(host);
         _client.SensorDataReceived += OnSensorDataReceived;
 
@@ -53,7 +54,7 @@ internal class Program
 
         try
         {
-            Console.WriteLine($"Connecting to LIMSMarlin at {host}:5000...");
+            Console.WriteLine($"Connecting to LIMSMarlin at {_client.Host}:{_client.Port}...");
             await _client.ConnectAsync();
             Console.WriteLine("Connected!");
 

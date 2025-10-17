@@ -7,15 +7,19 @@
     <Nullable>enable</Nullable>
     <AssemblyName>App</AssemblyName>
   </PropertyGroup>
-    
+
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\wilderness\Meadow.Core\Source\extensions\Meadow.AspNetCore.Abstractions\Meadow.AspNetCore.Abstractions.csproj" />
-    <ProjectReference Include="..\..\..\..\wilderness\Meadow.Core\Source\implementations\linux\Meadow.Linux\Meadow.Linux.csproj" />
-    <ProjectReference Include="..\..\..\..\wilderness\Meadow.Foundation\Source\Meadow.Foundation.Peripherals\ICs.ADC.Ads1x15\Driver\ICs.ADC.Ads1x15.csproj" />
-    <ProjectReference Include="..\..\..\..\wilderness\Meadow.Foundation\Source\Meadow.Foundation.Peripherals\Sensors.Atmospheric.Ahtx0\Driver\Sensors.Atmospheric.Ahtx0.csproj" />
-    <ProjectReference Include="..\..\..\..\wilderness\Meadow.Foundation\Source\Meadow.Foundation.Peripherals\Sensors.Environmental.Ens160\Driver\Sensors.Environmental.Ens160.csproj" />
-    <ProjectReference Include="..\..\..\..\wilderness\Meadow.Foundation\Source\Meadow.Foundation.Peripherals\Sensors.Motion.Bmi270\Driver\Sensors.Motion.Bmi270.csproj" />
-    <ProjectReference Include="..\LIMSMarlin.SDK\LIMSMarlin.SDK.csproj" />
+    <PackageReference Include="Meadow.AspNetCore.Abstractions" Version="2.4.0.7-beta" />
+    <PackageReference Include="Meadow.Foundation" Version="2.4.0.7-beta" />
+    <PackageReference Include="Meadow.Foundation.ICs.ADC.Ads1x15" Version="2.4.0.7-beta" />
+    <PackageReference Include="Meadow.Foundation.Sensors.Atmospheric.Ahtx0" Version="2.4.0.7-beta" />
+    <PackageReference Include="Meadow.Foundation.Sensors.Environmental.Ens160" Version="2.4.0.7-beta" />
+    <PackageReference Include="Meadow.Foundation.Sensors.Motion.Bmi270" Version="2.4.0.7-beta" />
+    <PackageReference Include="Meadow.Linux" Version="2.4.0.7-beta" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\LIMSMarlin.SDK\LIMSMarlin.SDK.csproj" />
+  </ItemGroup>
+    
 </Project>
