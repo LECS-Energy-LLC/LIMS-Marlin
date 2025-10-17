@@ -10,6 +10,7 @@ namespace LIMSMarlin;
 internal class PublisherService
 {
     private readonly ConcurrentDictionary<string, WebSocket> _connections = new();
+    private readonly ConcurrentDictionary<string, CancellationTokenSource> _connectionCancellations = new();
     private readonly JsonSerializerOptions options = new JsonSerializerOptions
     {
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -36,13 +37,15 @@ internal class PublisherService
 
         var webSocket = await context.WebSockets.AcceptWebSocketAsync();
         var connectionId = Guid.NewGuid().ToString();
+        var cts = new CancellationTokenSource();
 
         _connections.TryAdd(connectionId, webSocket);
+        _connectionCancellations.TryAdd(connectionId, cts);
         Resolver.Log.Info($"WebSocket connection established: {connectionId}");
 
         try
         {
-            await HandleWebSocketCommunication(webSocket, connectionId);
+            await HandleWebSocketCommunication(webSocket, connectionId, cts.Token);
         }
         catch (Exception ex)
         {
@@ -51,6 +54,8 @@ internal class PublisherService
         finally
         {
             _connections.TryRemove(connectionId, out _);
+            _connectionCancellations.TryRemove(connectionId, out var removedCts);
+            removedCts?.Dispose();
             Resolver.Log.Info($"WebSocket connection closed: {connectionId}");
         }
     }
@@ -118,8 +123,16 @@ internal class PublisherService
     /// </summary>
     public async Task DisconnectAllClients()
     {
-        var tasks = new List<Task>();
+        Resolver.Log.Info($"Disconnecting {_connections.Count} WebSocket clients...");
 
+        // First, cancel all receive loops
+        foreach (var kvp in _connectionCancellations)
+        {
+            kvp.Value.Cancel();
+        }
+
+        // Then close all connections
+        var tasks = new List<Task>();
         foreach (var kvp in _connections)
         {
             var webSocket = kvp.Value;
@@ -138,6 +151,7 @@ internal class PublisherService
         }
 
         _connections.Clear();
+        _connectionCancellations.Clear();
         Resolver.Log.Info("All WebSocket connections closed");
     }
 
@@ -157,17 +171,17 @@ internal class PublisherService
         }
     }
 
-    private async Task HandleWebSocketCommunication(WebSocket webSocket, string connectionId)
+    private async Task HandleWebSocketCommunication(WebSocket webSocket, string connectionId, CancellationToken cancellationToken)
     {
         var buffer = new byte[4096];
 
-        while (webSocket.State == WebSocketState.Open)
+        while (webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
         {
             try
             {
                 var result = await webSocket.ReceiveAsync(
                     new ArraySegment<byte>(buffer),
-                    CancellationToken.None);
+                    cancellationToken);
 
                 if (result.MessageType == WebSocketMessageType.Text)
                 {
@@ -185,6 +199,11 @@ internal class PublisherService
                         CancellationToken.None);
                     break;
                 }
+            }
+            catch (OperationCanceledException)
+            {
+                Resolver.Log.Info($"WebSocket receive cancelled for connection {connectionId}");
+                break;
             }
             catch (WebSocketException ex)
             {
