@@ -1,0 +1,4 @@
+﻿Logging:
+    LogLevel:
+        # Trace, Debug, Information, Warning, or Error
+        Default: Debug

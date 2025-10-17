@@ -17,6 +17,12 @@
     <PackageReference Include="Meadow.Foundation.Sensors.Motion.Bmi270" Version="2.4.0.7-beta" />
     <PackageReference Include="Meadow.Linux" Version="2.4.0.7-beta" />
   </ItemGroup>
+    
+  <ItemGroup>
+    <None Update="app.config.yaml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\LIMSMarlin.SDK\LIMSMarlin.SDK.csproj" />

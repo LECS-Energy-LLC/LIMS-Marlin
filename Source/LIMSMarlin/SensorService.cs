@@ -15,11 +15,9 @@ internal class SensorService
     private readonly Bmi270? _imu;
     private readonly Aht10? _tempSensor;
     private readonly Ens160? _airQualitySensor;
-    private readonly Ads1115? _adc0;
-    private readonly Ads1115? _adc1;
-    private readonly Ads1115? _adc2;
-    private readonly Ads1115? _adc3;
+    private readonly Ads1115? _adc;
     private readonly IDigitalOutputPort _fanControl;
+    private CancellationTokenSource? _cts;
 
     public SensorService(RaspberryPi hardware)
     {
@@ -73,51 +71,40 @@ internal class SensorService
 
         try
         {
-            _adc0 = new Ads1115(
+            // Use SingleShot mode for better channel switching behavior
+            // Continuous mode samples one channel continuously, making channel switching problematic
+            _adc = new Ads1115(
                 i2c,
                 Ads1x15Base.Addresses.Address_0x48,
-                Ads1x15Base.MeasureMode.Continuous,
+                Ads1x15Base.MeasureMode.OneShot,
                 Ads1x15Base.ChannelSetting.A0SingleEnded,
                 Ads1115.SampleRateSetting.Sps128);
 
-            _adc1 = new Ads1115(
-                i2c,
-                Ads1x15Base.Addresses.Address_0x48,
-                Ads1x15Base.MeasureMode.Continuous,
-                Ads1x15Base.ChannelSetting.A1SingleEnded,
-                Ads1115.SampleRateSetting.Sps128);
-
-            _adc2 = new Ads1115(
-                i2c,
-                Ads1x15Base.Addresses.Address_0x48,
-                Ads1x15Base.MeasureMode.Continuous,
-                Ads1x15Base.ChannelSetting.A2SingleEnded,
-                Ads1115.SampleRateSetting.Sps128);
-
-            _adc3 = new Ads1115(
-                i2c,
-                Ads1x15Base.Addresses.Address_0x48,
-                Ads1x15Base.MeasureMode.Continuous,
-                Ads1x15Base.ChannelSetting.A3SingleEnded,
-                Ads1115.SampleRateSetting.Sps128);
+            // Set gain for ±6.144V range (max range, suitable for 5V signals)
+            // FsrGain.TwoThirds = ±6.144V, FsrGain.One = ±4.096V, FsrGain.Two = ±2.048V
+            _adc.Gain = Ads1x15Base.FsrGain.TwoThirds;
 
             Resolver.Log.Info("ADC found");
-
-            // TODO: configure ADC range
 
         }
         catch (Exception ex)
         {
             Resolver.Log.Error($"Failed to initialize ADS1115: {ex.Message}");
-            _adc0 = null;
+            _adc = null;
         }
     }
 
     public async Task Start()
     {
-        CancellationTokenSource cts = new CancellationTokenSource();
+        _cts = new CancellationTokenSource();
         Resolver.Log.Info("Starting sensor read thread...");
-        await Task.Run(() => SensorReadProc(cts.Token), cts.Token);
+        await Task.Run(() => SensorReadProc(_cts.Token), _cts.Token);
+    }
+
+    public void Stop()
+    {
+        Resolver.Log.Info("Stopping sensor service...");
+        _cts?.Cancel();
     }
 
     private async Task SensorReadProc(CancellationToken cancellationToken)
@@ -178,28 +165,30 @@ internal class SensorService
                     }
                 }
 
-                if (_adc0 != null)
+                if (_adc != null)
                 {
-                    var channel0 = await _adc0.Read();
+                    // Read all 4 channels from the single ADC
+                    // Note: Need delay after channel change for ADC to settle
+                    _adc.Channel = Ads1x15Base.ChannelSetting.A0SingleEnded;
+                    await Task.Delay(10); // Allow ADC to settle after channel change
+                    var channel0 = await _adc.Read();
                     data.ADC0Value = channel0.Volts;
-                    hasData = true;
-                }
-                if (_adc1 != null)
-                {
-                    var channel1 = await _adc1.Read();
+
+                    _adc.Channel = Ads1x15Base.ChannelSetting.A1SingleEnded;
+                    await Task.Delay(10);
+                    var channel1 = await _adc.Read();
                     data.ADC1Value = channel1.Volts;
-                    hasData = true;
-                }
-                if (_adc2 != null)
-                {
-                    var channel2 = await _adc2.Read();
+
+                    _adc.Channel = Ads1x15Base.ChannelSetting.A2SingleEnded;
+                    await Task.Delay(10);
+                    var channel2 = await _adc.Read();
                     data.ADC2Value = channel2.Volts;
-                    hasData = true;
-                }
-                if (_adc3 != null)
-                {
-                    var channel3 = await _adc3.Read();
+
+                    _adc.Channel = Ads1x15Base.ChannelSetting.A3SingleEnded;
+                    await Task.Delay(10);
+                    var channel3 = await _adc.Read();
                     data.ADC3Value = channel3.Volts;
+
                     hasData = true;
                 }
             }
